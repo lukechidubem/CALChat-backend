@@ -2,9 +2,7 @@ extends baseEmail
 
 block content
   p Hi #{firstName},
-  p Welcome to CALChat, we're glad to have you 🎉🙏
-  p Chat, interact, make new freinds and have lots of fun.
-  p We're all a big familiy here, so make sure to upload your user photo so we get to know you a bit better!
+  p Use the 6 digit numbers to verify your account. Note that it is valid for only 10 minutes: #{otp}.
   table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
     tbody
       tr
@@ -13,6 +11,6 @@ block content
             tbody
               tr
                 td
-                  a(href=`${url}`, target='_blank') Upload user photo
+                  a(href=`${url}`, target='_blank') Here is your OTP: #{otp}
   p If you need any help or facing any challenges, please don't hesitate to contact me!
   p - Luke Chidubem, Developer

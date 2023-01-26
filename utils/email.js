@@ -6,10 +6,11 @@ const pug = require('pug');
 const { convert } = require('html-to-text');
 
 module.exports = class Email {
-  constructor(user, url) {
+  constructor(user, url, otp) {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
+    this.otp = otp;
     this.from = `Dubem Luke <${process.env.EMAIL_FROM}>`;
   }
 
@@ -33,25 +34,25 @@ module.exports = class Email {
     //     pass: process.env.EMAIL_PASSWORD,
     //   },
     // });
+    // return nodemailer.createTransport({
+    //   service: 'SendGrid',
+    //   auth: {
+    //     user: process.env.SENDGRID_USERNAME,
+    //     pass: process.env.SENDGRID_PASSWORD,
+    //   },
+    // });
+    // console.log('working');
+
     return nodemailer.createTransport({
-      service: 'SendGrid',
+      // service: 'SendGrid',
+      host: 'smtp.sendgrid.net',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.SENDGRID_USERNAME,
         pass: process.env.SENDGRID_PASSWORD,
       },
     });
-    // console.log('working');
-
-    // return nodemailer.createTransport({
-    //   // service: 'SendGrid',
-    //   host: 'smtp.sendgrid.net',
-    //   port: 465,
-    //   secure: true,
-    //   auth: {
-    //     user: process.env.SENDGRID_USERNAME,
-    //     pass: process.env.SENDGRID_PASSWORD
-    //   }
-    // });
   }
 
   mailgun() {
@@ -67,6 +68,7 @@ module.exports = class Email {
     const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
+      otp: this.otp,
       subject,
     });
 
@@ -103,6 +105,13 @@ module.exports = class Email {
     await this.send(
       'passwordReset',
       'Your password reset token (valid for only 10 minutes)'
+    );
+  }
+
+  async sendOTPVerify() {
+    await this.send(
+      'sendOTP',
+      `Your OTP token ${this.otp} (valid for only 10 minutes)`
     );
   }
 };
