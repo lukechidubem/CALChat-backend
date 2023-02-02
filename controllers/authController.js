@@ -4,11 +4,11 @@ const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
-// const sendEmail = require('./../utils/email');
-// const sendEmail2 = require('./../utils/email');
 const Email = require('./../utils/email');
 const filterObject = require('../utils/filterObject');
 const otpGenerator = require('otp-generator');
+
+const mailService = require('../services/mailer');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -216,6 +216,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 3) Update changedPasswordAt property for the user... did it in userModel
+
   // 4) Log the user in, send JWT
   createSendToken(user, 200, req, res);
 });
@@ -230,13 +231,6 @@ exports.register = catchAsync(async (req, res, next) => {
   const userExist = await User.findOne({ email: email });
 
   if (userExist && userExist.verified) {
-    // res
-    //   .status(400)
-    //   .json({
-    //     status: 'error',
-    //     message: 'Email already registered, try logging in',
-    //   });
-
     return next(new AppError('Email already registered, try logging in', 400));
   } else if (userExist) {
     await User.findOneAndUpdate({ email: email }, filteredBody, {
@@ -269,11 +263,12 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   const otpExpiresTime = Date.now() + 10 * 60 * 1000;
 
   const user = await User.findByIdAndUpdate(userId, {
-    otp: newOtp,
     otpExpiresTime,
   });
 
-  // await user.save({ validateBeforeSave: false });
+  user.otp = newOtp.toString();
+
+  await user.save({ validateBeforeSave: true });
 
   // Sending The OTP to users email address
   const url = `${req.protocol}://${req.get('host')}/otp`;
@@ -281,9 +276,17 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   await new Email(user, url, newOtp).sendOTPVerify();
 
+  // mailService.sendMail({
+  //   from: 'lukechidubem@gmail.com',
+  //   to: user.email,
+  //   subject: 'OTP for CALChat',
+  //   text: `Your OTP is ${newOtp}, it is only valid for 10 minutes`,
+  //   attachment: [],
+  // });
+
   res
     .status(200)
-    .json({ status: 'success', otp: newOtp, message: 'Otp sent successfully' });
+    .json({ status: 'success', otp: newOtp, message: 'OTP sent successfully' });
 });
 
 // OTP Verification
@@ -304,13 +307,17 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid Email or Experired OTP', 401));
   }
 
-  // if (!(await user.correctOTP(otp, user.otp))) {
-  //   return next(new AppError('Incorrect OTP', 401));
-  // }
+  if (user.verified) {
+    return next(new AppError('Email is already verified', 401));
+  }
 
-  if (user.otp != otp) {
+  if (!(await user.correctOTP(otp, user.otp))) {
     return next(new AppError('Incorrect OTP', 401));
   }
+
+  // if (user.otp != otp) {
+  //   return next(new AppError('Incorrect OTP', 401));
+  // }
 
   // Correct OTP
   user.verified = true;
