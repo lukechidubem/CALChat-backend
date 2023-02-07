@@ -175,7 +175,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     const resetURL = `${req.protocol}://${req.get(
       'host'
     )}/api/users/resetPassword/${resetToken}`;
-    await new Email(user, resetURL).sendPasswordReset();
+
+    const resetURL2 = `${req.protocol}://localhost:3000/auth/new-password/${resetToken}`;
+
+    await new Email(user, resetURL2).sendPasswordReset();
 
     res.status(200).json({
       status: 'success',
@@ -207,6 +210,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // 2) If token has not expired, and there is user, set the new password
   if (!user) {
+    console.log('invalid');
     return next(new AppError('Token is invalid or has expired', 400));
   }
   user.password = req.body.password;
