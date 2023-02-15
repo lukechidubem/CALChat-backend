@@ -21,4 +21,6 @@ router.patch(
   userController.updateMe
 );
 
+router.get('/find/:userId', userController.findUser);
+
 module.exports = router;

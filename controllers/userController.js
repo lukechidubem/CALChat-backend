@@ -31,3 +31,13 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.findUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+
+  if (!user) return next(new AppError('user does not exist', 401));
+
+  res.status(200).json(user);
+});
