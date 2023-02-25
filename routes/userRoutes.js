@@ -17,6 +17,8 @@ router.get('/find', userController.getUsers);
 
 router.use(authController.protect);
 
+router.get('/getAll', userController.getUsers2);
+
 router.patch(
   '/updateMe',
   // userController.uploadUserPhoto,
