@@ -19,6 +19,9 @@ router.use(authController.protect);
 
 router.get('/getAll', userController.getUsers2);
 
+router.get('/getRequests', userController.getRequests);
+router.get('/getFriends', userController.getFriends);
+
 router.patch(
   '/updateMe',
   // userController.uploadUserPhoto,

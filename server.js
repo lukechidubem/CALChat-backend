@@ -17,6 +17,7 @@ const server = http.createServer(app);
 const { Server } = require('socket.io');
 const { promisify } = require('util');
 const User = require('./models/userModel');
+const FriendRequest = require('./models/friendRequestModel');
 
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
 const io = new Server(server, {
@@ -51,7 +52,7 @@ io.on('connection', async (socket) => {
 
   console.log(`User connected ${socket.id}`);
 
-  if (user_id) {
+  if (Boolean(user_id)) {
     await User.findByIdAndUpdate(user_id, { socket_id: socket.id });
   }
 
@@ -60,12 +61,58 @@ io.on('connection', async (socket) => {
     console.log(data.to);
 
     const to = await User.findById(data.to).select('socket_id');
+    const from = await User.findById(data.from).select('socket_id');
 
     // create a friend request
+    await FriendRequest.create({
+      sender: data.from,
+      recipient: data.to,
+    });
+
     // emit event request received to recipient
     io.to(to.socket_id).emit('new_friend_request', {
-      message: 'Here we can pass some data',
+      message: 'New friend request received',
     });
+
+    io.to(from.socket_id).emit('request_sent', {
+      message: 'Request Sent successfully!',
+    });
+  });
+
+  socket.on('accept_request', async (data) => {
+    // accept friend request => add ref of each other in friends array
+    console.log(data);
+    const request_doc = await FriendRequest.findById(data.request_id);
+
+    console.log(request_doc);
+
+    const sender = await User.findById(request_doc.sender);
+    const receiver = await User.findById(request_doc.recipient);
+
+    sender.friends.push(request_doc.recipient);
+    receiver.friends.push(request_doc.sender);
+
+    await receiver.save({ new: true, validateModifiedOnly: true });
+    await sender.save({ new: true, validateModifiedOnly: true });
+
+    await FriendRequest.findByIdAndDelete(data.request_id);
+
+    // delete this request doc
+    // emit event to both of them
+
+    // emit event request accepted to both
+    io.to(sender.socket_id).emit('request_accepted', {
+      message: 'Friend Request Accepted',
+    });
+
+    io.to(receiver.socket_id).emit('request_accepted', {
+      message: 'Friend Request Accepted',
+    });
+  });
+
+  socket.on('end', function () {
+    console.log('closing connection');
+    socket.disconnect(0);
   });
 });
 
