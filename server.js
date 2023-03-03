@@ -58,8 +58,6 @@ io.on('connection', async (socket) => {
 
   // We can write our socket event listeners in here...
   socket.on('friend_request', async (data) => {
-    console.log(data.to);
-
     const to = await User.findById(data.to).select('socket_id');
     const from = await User.findById(data.from).select('socket_id');
 
@@ -110,7 +108,49 @@ io.on('connection', async (socket) => {
     });
   });
 
-  socket.on('end', function () {
+  // Handle incoming text/link messages
+  socket.on('text_message', (data) => {
+    console.log('Received message:', data);
+
+    // data: {to, from, text}
+
+    // create a new conversation if its dosent exists yet or add a new message to existing conversation
+
+    // save to db
+
+    // emit incoming_message -> to user
+
+    // emit outgoing_message -> from user
+  });
+
+  // handle Media/Document Message
+  socket.on('file_message', (data) => {
+    console.log('Received message:', data);
+
+    // data: {to, from, text, file}
+
+    // Get the file extension
+    const fileExtension = path.extname(data.file.name);
+
+    // Generate a unique filename
+    const filename = `${Date.now()}_${Math.floor(
+      Math.random() * 10000
+    )}${fileExtension}`;
+
+    // upload file to AWS s3
+
+    // create a new conversation if its dosent exists yet or add a new message to existing conversation
+
+    // save to db
+
+    // emit incoming_message -> to user
+
+    // emit outgoing_message -> from user
+  });
+
+  socket.on('end', async (data) => {
+    await User.findByIdAndUpdate(data.user_id, { status: 'Offline' });
+
     console.log('closing connection');
     socket.disconnect(0);
   });
