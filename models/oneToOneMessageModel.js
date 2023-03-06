@@ -26,7 +26,8 @@ const oneToOneMessageSchema = new mongoose.Schema({
       },
 
       created_at: {
-        type: Date.now(),
+        type: Date,
+        default: Date.now(),
       },
 
       text: {

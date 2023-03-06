@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const path = require('path');
 
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
@@ -18,6 +19,7 @@ const { Server } = require('socket.io');
 const { promisify } = require('util');
 const User = require('./models/userModel');
 const FriendRequest = require('./models/friendRequestModel');
+const OneToOneMessage = require('./models/oneToOneMessageModel');
 
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
 const io = new Server(server, {
@@ -53,7 +55,10 @@ io.on('connection', async (socket) => {
   console.log(`User connected ${socket.id}`);
 
   if (Boolean(user_id)) {
-    await User.findByIdAndUpdate(user_id, { socket_id: socket.id });
+    await User.findByIdAndUpdate(user_id, {
+      socket_id: socket.id,
+      status: 'Online',
+    });
   }
 
   // We can write our socket event listeners in here...
@@ -106,6 +111,53 @@ io.on('connection', async (socket) => {
     io.to(receiver.socket_id).emit('request_accepted', {
       message: 'Friend Request Accepted',
     });
+  });
+
+  socket.on('get_direct_conversations', async ({ user_id }, callback) => {
+    const existing_conversations = await OneToOneMessage.find({
+      participants: { $all: [user_id] },
+    }).populate('participants', 'name _id email status');
+
+    // db.books.find({ authors: { $elemMatch: { name: "John Smith" } } })
+
+    console.log(existing_conversations);
+
+    callback(existing_conversations);
+  });
+
+  socket.on('start_conversation', async (data) => {
+    // data: {to: from:}
+
+    const { to, from } = data;
+
+    // check if there is any existing conversation
+
+    const existing_conversations = await OneToOneMessage.find({
+      participants: { $size: 2, $all: [to, from] },
+    }).populate('participants', 'name _id email status');
+
+    console.log(existing_conversations[0], 'Existing Conversation');
+
+    // if no => create a new OneToOneMessage doc & emit event "start_chat" & send conversation details as payload
+    if (existing_conversations.length === 0) {
+      let new_chat = await OneToOneMessage.create({
+        participants: [to, from],
+      });
+
+      new_chat = await OneToOneMessage.findById(new_chat).populate(
+        'participants',
+        'name _id email status'
+      );
+
+      console.log(new_chat);
+      // TODO
+      socket.emit('start_chat', new_chat);
+    }
+    // if yes => just emit event "open_chat" & send conversation details as payload
+    else {
+      // TODO
+      socket.emit('open_chat', existing_conversations[0]);
+    }
   });
 
   // Handle incoming text/link messages
