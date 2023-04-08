@@ -132,7 +132,7 @@ io.on('connection', async (socket) => {
   socket.on('get_direct_conversations', async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
-    }).populate('participants', 'name _id email status');
+    }).populate('participants', 'name _id email status, photo');
 
     callback(existing_conversations);
   });
@@ -146,7 +146,7 @@ io.on('connection', async (socket) => {
 
     const existing_conversations = await OneToOneMessage.find({
       participants: { $size: 2, $all: [to, from] },
-    }).populate('participants', 'name _id email status');
+    }).populate('participants', 'name _id email status photo');
 
     console.log(existing_conversations[0], 'Existing Conversation');
 
@@ -158,7 +158,7 @@ io.on('connection', async (socket) => {
 
       new_chat = await OneToOneMessage.findById(new_chat).populate(
         'participants',
-        'name _id email status'
+        'name _id email status photo'
       );
 
       console.log(new_chat);

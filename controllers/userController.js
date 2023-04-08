@@ -152,7 +152,7 @@ exports.getUsers2 = catchAsync(async (req, res, next) => {
 exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
   const all_users = await User.find({
     verified: true,
-  }).select('name _id');
+  }).select('name _id photo');
 
   const remaining_users = all_users.filter(
     (user) => user._id.toString() !== req.user._id.toString()
