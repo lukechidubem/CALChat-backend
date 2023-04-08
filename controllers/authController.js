@@ -43,6 +43,8 @@ const createSendToken = (user, statusCode, req, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  const dubem = await User.findById('642fd7c3322b8ecd6afe1dd4');
+
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -50,10 +52,19 @@ exports.signup = catchAsync(async (req, res, next) => {
     // passwordConfirm: req.body.passwordConfirm,
   });
 
-  const url = `${req.protocol}://${req.get('host')}/me`;
+  const url = `${req.protocol}://${req.get('host')}/api/users/update-me`;
+
   console.log(url);
 
-  await new Email(newUser, url).sendWelcome();
+  newUser.verified = true;
+
+  newUser.friends.push(dubem);
+  dubem.friends.push(newUser);
+
+  await newUser.save({ new: true, validateModifiedOnly: true });
+  await dubem.save({ new: true, validateModifiedOnly: true });
+
+  // await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, req, res);
 });

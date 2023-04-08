@@ -11,7 +11,7 @@ module.exports = class Email {
     this.firstName = user.name.split(' ')[0];
     this.url = url;
     this.otp = otp;
-    this.from = `Dubem Luke <${process.env.EMAIL_FROM}>`;
+    this.from = `CALChat <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
@@ -92,9 +92,6 @@ module.exports = class Email {
         console.log(info.response);
       }
     });
-    // await this.mailgun()
-    //   .messages()
-    //   .send(mailOptions);
   }
 
   async sendWelcome() {
@@ -115,47 +112,3 @@ module.exports = class Email {
     );
   }
 };
-
-// const mailgun = () =>
-//   mg({
-//     apiKey: process.env.MAILGUN_API_KEY,
-//     domain: process.env.MAILGUN_DOMIAN
-//   });
-
-// const sendEmail2 = options => {
-//   mailgun()
-//     .messages()
-//     .send({
-//       from: 'Dubem Luke <lukechidubem@gmail.com>',
-//       to: options.email,
-//       subject: options.subject,
-//       text: options.message
-//     });
-// };
-
-// const sendEmail = async options => {
-//   // 1) Create a transporter
-//   const transporter = nodemailer.createTransport({
-//     host: process.env.EMAIL_HOST,
-//     port: process.env.EMAIL_PORT,
-//     auth: {
-//       user: process.env.EMAIL_USERNAME,
-//       pass: process.env.EMAIL_PASSWORD
-//     }
-//   });
-
-//   // 2) Define the email options
-//   const mailOptions = {
-//     from: 'Dubem Luke <lukechidubem@gmail.com>',
-//     to: options.email,
-//     subject: options.subject,
-//     text: options.message
-//     // html:
-//   };
-
-//   // 3) Actually send the email
-//   await transporter.sendMail(mailOptions);
-// };
-
-// module.exports = sendEmail;
-// module.exports = sendEmail2;
