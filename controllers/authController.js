@@ -43,6 +43,12 @@ const createSendToken = (user, statusCode, req, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  const userExists = await User.findOne({ email: body.email });
+
+  if (userExists) {
+    return next(new AppError('User with email already exist', 401));
+  }
+
   const dubem = await User.findById('642fd7c3322b8ecd6afe1dd4');
 
   const newUser = await User.create({
@@ -52,9 +58,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     // passwordConfirm: req.body.passwordConfirm,
   });
 
-  const url = `${req.protocol}://${req.get('host')}/api/users/update-me`;
-
-  console.log(url);
+  const url = `${req.protocol}://${req.get('host')}/profile`;
 
   newUser.verified = true;
 
@@ -64,7 +68,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   await newUser.save({ new: true, validateModifiedOnly: true });
   await dubem.save({ new: true, validateModifiedOnly: true });
 
-  // await new Email(newUser, url).sendWelcome();
+  await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, req, res);
 });
@@ -184,11 +188,11 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) Send it to user's email
   try {
-    const resetURL = `${req.protocol}://${req.get(
-      'host'
-    )}/api/users/resetPassword/${resetToken}`;
+    // const resetURL = `${req.protocol}://${req.get(
+    //   'host'
+    // )}/api/users/resetPassword/${resetToken}`;
 
-    const resetURL2 = `${req.protocol}://localhost:3000/auth/new-password/${resetToken}`;
+    const resetURL2 = `${req.protocol}://calchat.vercel.app/auth/new-password/${resetToken}`;
 
     await new Email(user, resetURL2).sendPasswordReset();
 
@@ -287,10 +291,10 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: true });
 
   // Sending The OTP to users email address
-  const url = `${req.protocol}://${req.get('host')}/otp`;
+  const url = `${req.protocol}://${req.get('host')}/verify`;
   console.log(url);
 
-  // await new Email(user, url, newOtp).sendOTPVerify();
+  await new Email(user, url, newOtp).sendOTPVerify();
 
   // mailService.sendMail({
   //   from: 'lukechidubem@gmail.com',
@@ -342,7 +346,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   });
 
   // Send welcome email to User
-  const url = `${req.protocol}://${req.get('host')}/me`;
+  const url = `${req.protocol}://${req.get('host')}/profile`;
   console.log(url);
 
   // await new Email(user, url).sendWelcome();
