@@ -58,7 +58,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     // passwordConfirm: req.body.passwordConfirm,
   });
 
-  const url = `${req.protocol}://${req.get('host')}/profile`;
+  const url = `${req.protocol}://calchat.vercel.app/profile`;
 
   newUser.verified = true;
 
