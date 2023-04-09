@@ -659,18 +659,18 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('disconnect_on_reload', async () => {
-    const groups = await Room.find({ members: socket.id });
+  // socket.on('disconnect_on_reload', async () => {
+  //   const groups = await Room.find({ members: socket.id });
 
-    // Remove the user's socket id from each group's members array
-    groups.forEach(async (group) => {
-      // group.members.pull(socket.id);
+  //   // Remove the user's socket id from each group's members array
+  //   groups.forEach(async (group) => {
+  //     // group.members.pull(socket.id);
 
-      group.members = group.members.filter((member) => member !== socket.id);
+  //     group.members = group.members.filter((member) => member !== socket.id);
 
-      await group.save();
-    });
-  });
+  //     await group.save();
+  //   });
+  // });
 
   // ============================ Group Chat =================================
 
