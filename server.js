@@ -58,11 +58,15 @@ io.on('connection', async (socket) => {
 
   console.log(`User connected ${socket?.id}`);
 
-  if (Boolean(user_id)) {
-    await User.findByIdAndUpdate(user_id, {
-      socket_id: socket.id,
-      status: 'Online',
-    });
+  if (user_id != null && Boolean(user_id)) {
+    try {
+      await User.findByIdAndUpdate(user_id, {
+        socket_id: socket.id,
+        status: 'Online',
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   // Fetch the user's groups from the database
