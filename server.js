@@ -136,7 +136,7 @@ io.on('connection', async (socket) => {
   socket.on('get_direct_conversations', async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
-    }).populate('participants', 'name _id email status, photo');
+    }).populate('participants', 'name _id email status photo');
 
     callback(existing_conversations);
   });
